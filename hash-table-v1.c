@@ -7,6 +7,10 @@
 
 #include <pthread.h>
 
+#include <errno.h>
+
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+
 struct list_entry {
 	const char *key;
 	uint32_t value;
@@ -72,6 +76,9 @@ void hash_table_v1_add_entry(struct hash_table_v1 *hash_table,
                              const char *key,
                              uint32_t value)
 {
+	int e = pthread_mutex_lock(&mutex);
+	if(e != 0) exit(errno);
+
 	struct hash_table_entry *hash_table_entry = get_hash_table_entry(hash_table, key);
 	struct list_head *list_head = &hash_table_entry->list_head;
 	struct list_entry *list_entry = get_list_entry(hash_table, key, list_head);
@@ -86,6 +93,8 @@ void hash_table_v1_add_entry(struct hash_table_v1 *hash_table,
 	list_entry->key = key;
 	list_entry->value = value;
 	SLIST_INSERT_HEAD(list_head, list_entry, pointers);
+	e = pthread_mutex_unlock(&mutex);
+	if( e != 0 ) exit(errno);
 }
 
 uint32_t hash_table_v1_get_value(struct hash_table_v1 *hash_table,
@@ -111,4 +120,6 @@ void hash_table_v1_destroy(struct hash_table_v1 *hash_table)
 		}
 	}
 	free(hash_table);
+	int e = pthread_mutex_destroy(&mutex);
+	if (e != 0) exit(errno);
 }
