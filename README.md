@@ -116,6 +116,12 @@ With this scenario here, there still are collisions (if two threads attempt) to
 access two elements that happen to hash to the same bucket of the table, but
 the chance of this is much lower, and thus the hash table is much more efficient
 
+It should be mentioned that there is some overhead in creating and managing
+threads and locks. However, with the case of v2, we still are saving time
+since the amount of time saved due to avoiding collisions is greater than
+the amount of time lost generating more locks (one lock per bucket, as 
+compared to one lock per program)
+
 ## Cleaning up
 ```shell
 make clean
